@@ -21,8 +21,7 @@ export default function Profile({
 
     return (
         <>
-            You logged in!
-            <h1>Hey, {profile.name}!</h1>
+            <h1>Hey {profile.name}!</h1>
             <h2>Here's your progress so far</h2>
 
             <div>

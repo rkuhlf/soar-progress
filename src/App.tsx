@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import { GoogleLogin } from '@react-oauth/google';
 import Profile, { type ProfileData } from './components/Profile';
 
 function testEndpoint() {
@@ -49,7 +48,7 @@ function App() {
                     })
                     .then((data: any) => {
                       setProfile({
-                        name: data.name,
+                        name: data.given_name,
                         email: data.email
                       })
                     })
@@ -59,17 +58,21 @@ function App() {
         [ user ]
     );
 
-    // log out function to log the user out of google and set the profile array to null
     const logOut = () => {
-        googleLogout();
-        setProfile(null);
+      googleLogout();
+      setProfile(null);
     };
 
     return (
         <div>
             
             {profile ? (
+              <>
                 <Profile profile={profile} />
+                <button onClick={() => logOut()}>
+                  Log out ✌️
+              </button>
+              </>
             ) : (
                 <button onClick={() => login()}>Sign in with Google 🚀 </button>
             )}
