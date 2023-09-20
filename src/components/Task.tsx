@@ -6,10 +6,11 @@ export type TaskData = {
 
 
 export default function Task({ task } : { task: TaskData }) {
+    console.log(task);
     return (
         <div className="task">
             {task.name}
-            {task.completed}
+            {"" + task.completed}
         </div>
     )
 }

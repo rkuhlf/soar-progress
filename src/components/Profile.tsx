@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLoginContext } from "./LoginProvider";
 import type { TaskData } from "./Task";
 import Task from "./Task";
+import useSWR from "swr";
 
 
 export type ProfileData = {
@@ -9,20 +10,21 @@ export type ProfileData = {
     email: string,
 };
 
+async function fetcher(url: string) {
+    const data = await fetch(url);
+    console.log(data);
+
+    return await data.json();
+}
+
 /** This is the component that renders all of the information about the progress. */
 export default function Profile() {
     const { profile, logOut } = useLoginContext();
 
-    const [tasks, setTasks] = useState<TaskData[]>([
-        {
-            name: "Mental health thing",
-            completed: false
-        },
-        {
-            name: "Step 2",
-            completed: true
-        }
-    ]);
+    const { data : tasks, error, isLoading } = useSWR('/.netlify/functions/get-progress?email=fake@rice.edu', fetcher);
+    useEffect(() => {
+        console.log(tasks, error, isLoading);
+    }, [tasks, error, isLoading]);
 
     if (!profile) {
         // This should never run bc it's checked in the App, but we keep it to make TS happy.
@@ -40,7 +42,7 @@ export default function Profile() {
 
             <div>
                 {
-                    tasks.map((task: TaskData) => <Task task={task} />)
+                    tasks && tasks.map((task: TaskData) => <Task task={task} />)
                 }
             </div>
 
