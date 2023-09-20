@@ -9,5 +9,13 @@
 
 1. Run `npm run dev` in the command line to start the development server. 
 
+## Editing the Project
+1. Make the edits on your local version of your project.
+
+1. Add the files you want to commit in the version control on the left.
+
+1. Commit and push the changes for them to be propagated into the cloud version.
+
+Note: You should also fetch the project periodically. I think that VS Code has a button that does that.
 
 <!-- Use stale while revalidate for the tasks of the profile. Then the profile will be the only thing that we store in the context. Maybe we should also use stale while revalidate there. -->

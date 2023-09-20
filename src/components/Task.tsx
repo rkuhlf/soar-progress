@@ -3,3 +3,12 @@ export type TaskData = {
     name: string;
     completed: boolean;
 }
+
+
+export default function Task(task: TaskData) {
+    return (
+        <div>
+            
+        </div>
+    )
+}
