@@ -1,3 +1,4 @@
+import { useLoginContext } from "./LoginProvider";
 
 
 export type ProfileData = {
@@ -6,17 +7,16 @@ export type ProfileData = {
 };
 
 /** This is the component that renders all of the information about the progress. */
-export default function Profile({
-    profile
-}: { profile: ProfileData }) {
-    // TODO: set up state for tasks.
+export default function Profile() {
+    const { profile, logOut } = useLoginContext();
 
     if (!profile) {
+        // This should never run bc it's checked in the App, but we keep it to make TS happy.
         return (
             <div>
                 Loading...
             </div>
-        )
+        );
     }
 
     return (
@@ -33,6 +33,10 @@ export default function Profile({
                     // })
                 }
             </div>
+
+            <button onClick={() => logOut()}>
+                Log out ✌️
+            </button>
         </>
     )
 }
