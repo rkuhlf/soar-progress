@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
+import { GoogleLogin } from '@react-oauth/google';
+import Profile, { type ProfileData } from './components/Profile';
 
 function testEndpoint() {
   fetch('/.netlify/functions/hello')
@@ -20,33 +20,60 @@ function testEndpoint() {
 
 }
 
+type User = any;
+
+import { googleLogout, useGoogleLogin } from '@react-oauth/google';
+
 function App() {
-  const [count, setCount] = useState(0)
+    const [ user, setUser ] = useState<User | null>(null);
+    const [ profile, setProfile ] = useState<ProfileData | null>(null);
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => testEndpoint()}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    const login = useGoogleLogin({
+        onSuccess: (codeResponse) => setUser(codeResponse),
+        onError: (error) => console.log('Login Failed:', error)
+    });
+
+    useEffect(
+        () => {
+            if (user) {
+              console.log(user);
+                fetch(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`, {
+                        headers: {
+                            Authorization: `Bearer ${user.access_token}`,
+                            Accept: 'application/json'
+                        }
+                    })
+                    .then((res) => {
+                      console.log(res);
+                      return res.json();
+                    })
+                    .then((data: any) => {
+                      setProfile({
+                        name: data.name,
+                        email: data.email
+                      })
+                    })
+                    .catch((err) => console.log(err));
+            }
+        },
+        [ user ]
+    );
+
+    // log out function to log the user out of google and set the profile array to null
+    const logOut = () => {
+        googleLogout();
+        setProfile(null);
+    };
+
+    return (
+        <div>
+            
+            {profile ? (
+                <Profile profile={profile} />
+            ) : (
+                <button onClick={() => login()}>Sign in with Google 🚀 </button>
+            )}
+        </div>
+    );
 }
-
-export default App
+export default App;

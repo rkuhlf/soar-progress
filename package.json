@@ -12,6 +12,10 @@
   },
   "dependencies": {
     "@netlify/functions": "^2.0.2",
+    "@react-oauth/google": "^0.11.1",
+    "gapi": "^0.0.3",
+    "google-auth-library": "^9.0.0",
+    "googleapis": "^126.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
