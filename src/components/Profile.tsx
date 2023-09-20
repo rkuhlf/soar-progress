@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { useLoginContext } from "./LoginProvider";
+import type { TaskData } from "./Task";
+import Task from "./Task";
 
 
 export type ProfileData = {
@@ -9,6 +12,17 @@ export type ProfileData = {
 /** This is the component that renders all of the information about the progress. */
 export default function Profile() {
     const { profile, logOut } = useLoginContext();
+
+    const [tasks, setTasks] = useState<TaskData[]>([
+        {
+            name: "Mental health thing",
+            completed: false
+        },
+        {
+            name: "Step 2",
+            completed: true
+        }
+    ]);
 
     if (!profile) {
         // This should never run bc it's checked in the App, but we keep it to make TS happy.
@@ -26,11 +40,7 @@ export default function Profile() {
 
             <div>
                 {
-                    // profile.tasks.map((task: TaskData) => {
-                    //     return <div>
-
-                    //     </div>
-                    // })
+                    tasks.map((task: TaskData) => <Task task={task} />)
                 }
             </div>
 

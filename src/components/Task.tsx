@@ -5,10 +5,11 @@ export type TaskData = {
 }
 
 
-export default function Task(task: TaskData) {
+export default function Task({ task } : { task: TaskData }) {
     return (
-        <div>
-            
+        <div className="task">
+            {task.name}
+            {task.completed}
         </div>
     )
 }
