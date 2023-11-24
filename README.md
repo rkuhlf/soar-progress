@@ -17,3 +17,7 @@
 1. Commit and push the changes for them to be propagated into the cloud version.
 
 Note: You should also fetch the project periodically. I think that VS Code has a button that does that.
+
+
+<!-- TODO: Add better error messages for server-side errors. -->
+<!-- TODO: Fix checkbox. -->

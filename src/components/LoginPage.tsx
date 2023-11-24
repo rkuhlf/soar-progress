@@ -1,3 +1,4 @@
+import Checkbox from "./Checkbox";
 import { useLoginContext } from "./LoginProvider";
 import { useGoogleLogin } from "@react-oauth/google";
 
@@ -24,11 +25,7 @@ export default function LoginPage() {
                     <button className="login-button" onClick={() => popOutGoogleLogin()}>Sign in with Google 🚀 </button>
                 </div>
                 <label className="remember-me">
-                    <input
-                    type="checkbox"
-                    checked={shouldRememberLogin}
-                    onChange={handleCheckboxChange}
-                    />
+                    <Checkbox checked={shouldRememberLogin} onChange={handleCheckboxChange}/>
                     Remember me
                 </label>
             </div>

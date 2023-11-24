@@ -30,7 +30,14 @@ async function getSheet() {
   return res.data;
 }
 
-function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string): TaskData[] {
+function nameMatches(name: string, firstName: string, lastName: string): boolean {
+  lastName = lastName.trim();
+  firstName = firstName.trim();
+
+  return `${firstName} ${lastName}` == name || `${lastName} ${firstName}` == name;
+}
+
+function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {
   if (!sheet.valueRanges) {
     throw new Error("Could not find value ranges.");
   }
@@ -47,15 +54,14 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string):
     for (let i = 4; i < values.length; i++) {
       let lastName: string = values[i][2];
       let firstName: string = values[i][1];
+      let nickname: string = values[i][3];
+      let rowEmail: string = values[i][7];
 
       if (!lastName || !firstName) {
         break;
       }
 
-      lastName = lastName.trim();
-      firstName = firstName.trim();
-
-      if (`${firstName} ${lastName}` == name || `${lastName} ${firstName}` == name) {
+      if (nameMatches(name, firstName, lastName) || nameMatches(name, nickname, lastName) || rowEmail.trim() == email) {
         row = i;
         break;
       }
@@ -100,7 +106,7 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string):
   throw new Error("Could not find tasks");
 }
 
-async function getName(access_token: string) {
+async function getInfo(access_token: string) {
   return await fetch(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${access_token}`, {
     headers: {
       Authorization: `Bearer ${access_token}`,
@@ -110,8 +116,8 @@ async function getName(access_token: string) {
   .then((res) => {
     return res.json();
   })
-  .then((data: any): string => {
-    return data.name;
+  .then((data: any): {name: string, email: string} => {
+    return {name: data.name, email: data.email};
   })
   .catch((err) => console.log(err));
 }
@@ -134,17 +140,18 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     };
   } 
 
-  const name = await getName(access_token);
+  const info = await getInfo(access_token);
 
-  if (!name) {
+  if (!info) {
     return {
       statusCode: 400,
       body: "Could not determine the user's name."
     };
   }
+  const { name, email } = info;
 
   const sheet = await getSheet();
-  const data = getTasks(sheet, name);
+  const data = getTasks(sheet, name, email);
 
   return {
     statusCode: 200,
