@@ -5,6 +5,77 @@
   text-align: center;
 }
 
+.login-page {
+  margin-top: 15vh;
+}
+
+.title {
+  margin-bottom: 10vh;
+}
+
+.tasks {
+  border-radius: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
 .task {
-  color: red;
+  display: flex;
+  flex-direction: row;
+  padding: 10px;
+  gap: 10px;
+}
+
+.task:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.task:last-child {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.task-progress {
+  width: 2em;
+}
+
+.task-title {
+  flex: 1;
+  text-align: left;
+}
+
+.task-completed .task-title {
+  color: #bbb;
+  text-decoration: line-through;
+}
+
+.remember-me {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5em;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.login-button {
+  background-color: white;
+}
+
+.login-form {
+  background-color: #f9f9f9;
+  width: fit-content;
+  margin: 0 auto;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 1em;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+button {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }

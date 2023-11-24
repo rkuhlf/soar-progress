@@ -54,10 +54,10 @@ export default function LoginProvider({ children }: PropsWithChildren<{}>) {
         }
     }, []);
 
+    // When the user changes, we go to Google to get what their profile is.
     useEffect(
         () => {
             if (user) {
-                console.log(user);
                 fetch(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`, {
                     headers: {
                         Authorization: `Bearer ${user.access_token}`,
@@ -65,13 +65,13 @@ export default function LoginProvider({ children }: PropsWithChildren<{}>) {
                     }
                 })
                     .then((res) => {
-                        console.log(res);
                         return res.json();
                     })
                     .then((data: any) => {
                         setProfile({
                             name: data.given_name,
-                            email: data.email
+                            email: data.email,
+                            access_token: user.access_token,
                         })
                     })
                     .catch((err) => console.log(err));

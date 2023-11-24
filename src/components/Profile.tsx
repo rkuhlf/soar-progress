@@ -3,11 +3,13 @@ import { useLoginContext } from "./LoginProvider";
 import type { TaskData } from "./Task";
 import Task from "./Task";
 import useSWR from "swr";
+import Spinner from "./Spinner";
 
 
 export type ProfileData = {
     name: string,
     email: string,
+    access_token: string,
 };
 
 async function fetcher(url: string) {
@@ -21,11 +23,6 @@ async function fetcher(url: string) {
 export default function Profile() {
     const { profile, logOut } = useLoginContext();
 
-    const { data : tasks, error, isLoading } = useSWR('/.netlify/functions/get-progress?email=fake@rice.edu', fetcher);
-    useEffect(() => {
-        console.log(tasks, error, isLoading);
-    }, [tasks, error, isLoading]);
-
     if (!profile) {
         // This should never run bc it's checked in the App, but we keep it to make TS happy.
         return (
@@ -35,16 +32,26 @@ export default function Profile() {
         );
     }
 
+    // We send the access token, because that is the thing that should be really hard to fake.
+    const { data : tasks, error, isLoading } = useSWR(`/.netlify/functions/get-progress?access_token=${profile.access_token}`, fetcher);
+    useEffect(() => {
+        console.log(tasks, error, isLoading);
+    }, [tasks, error, isLoading]);
+
     return (
         <>
             <h1>Hey {profile.name}!</h1>
             <h2>Here's your progress so far</h2>
 
-            <div>
+            {
+                isLoading ?
+                    <Spinner />
+                : <div className="tasks">
                 {
                     tasks && tasks.map((task: TaskData) => <Task task={task} />)
                 }
             </div>
+            }
 
             <button onClick={() => logOut()}>
                 Log out ✌️
