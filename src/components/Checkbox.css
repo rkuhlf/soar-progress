@@ -7,6 +7,8 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    width: var(--checkmark-size);
+    height: var(--checkmark-size);
 
     --checkmark-size: 1.25em;
 }
@@ -31,14 +33,14 @@
     background-color: white;
     border-radius: 3px;
     box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.25s;
+    border: 1px solid transparent;
 }
 
-/* On mouse-over, add a grey background color */
-.container:hover input ~ .checkmark {
-    background-color: #ccc;
+.checkmark:hover {
+    border: 1px solid #646cff;
 }
 
-/* When the checkbox is checked, add a blue background */
 .container input:checked ~ .checkmark {
     background-color: #646cff;
 }
