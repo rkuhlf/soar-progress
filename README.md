@@ -20,4 +20,4 @@ Note: You should also fetch the project periodically. I think that VS Code has a
 
 
 <!-- TODO: Add better error messages for server-side errors. -->
-<!-- TODO: Fix checkbox. -->
+<!-- TODO: Add feedback and what is flight plan buttons. -->

@@ -13,7 +13,7 @@ export default function Task({ task } : { task: TaskData }) {
                 {
                     task.completed >= task.required ? 
                     "✅" : 
-                    `${task.required} / ${task.completed}`
+                    `${task.completed} / ${task.required}`
                 }
             </span>
 
