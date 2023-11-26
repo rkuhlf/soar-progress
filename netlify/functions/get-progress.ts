@@ -52,8 +52,8 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
     let row = -1;
 
     for (let i = 4; i < values.length; i++) {
-      let lastName: string = values[i][2];
-      let firstName: string = values[i][1];
+      let lastName: string = values[i][1];
+      let firstName: string = values[i][2];
       let nickname: string = values[i][3];
       let rowEmail: string = values[i][7];
 
