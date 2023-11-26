@@ -7,11 +7,12 @@ export type TaskData = {
 
 
 export default function Task({ task } : { task: TaskData }) {
+    const finishedTask = task.completed >= task.required
     return (
-        <div className={`task ${task.completed ? "task-completed" : ""}`}>
+        <div className={`task ${finishedTask ? "task-completed" : ""}`}>
             <span className="task-progress">
                 {
-                    task.completed >= task.required ? 
+                    finishedTask ? 
                     "✅" : 
                     `${task.completed} / ${task.required}`
                 }

@@ -83,9 +83,10 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
       required: 0,
     }
 
-    for (let i = 9; i < 20; i++) {
-      const name = values[3][i];
-      const completed = values[row][i];
+    let col = 10;
+    while (true) {
+      const name = values[3][col];
+      const completed = values[row][col];
 
       if (name != "" && name != currentTask.name) {
         currentTask = {
@@ -96,10 +97,18 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
         tasks.push(currentTask);
       }
 
-      currentTask.required += 1;
+      
       if (completed == "TRUE") {
         currentTask.completed += 1;
+        currentTask.required += 1;
+      } else if (completed == "FALSE") {
+        currentTask.required += 1;
+      } else {
+        // The first time we get to a spot where they don't have anything, that should be the last task.
+        break;
       }
+
+      col++;
     }
 
     return tasks;
@@ -155,7 +164,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   const { name, email } = info;
 
   const sheet = await getSheet();
-  const data = getTasks(sheet, "Jackson Moran", email);
+  const data = getTasks(sheet, name, email);
 
   console.log("Returning", data)
 
