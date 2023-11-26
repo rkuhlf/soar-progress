@@ -3,6 +3,8 @@ import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
 import { JWT } from "google-auth-library";
 import { google, sheets_v4 } from 'googleapis';
 import type { TaskData } from "../../src/components/Task";
+import { ErrorMessages } from "../../src/shared/errors";
+
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 const SHEET_ID = "1SzjlzhnZKmlzCrzb2lx8CE9cUwITn-sT6xZojdFPDv8";
@@ -39,14 +41,14 @@ function nameMatches(name: string, firstName: string, lastName: string): boolean
 
 function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {
   if (!sheet.valueRanges) {
-    throw new Error("Could not find value ranges.");
+    throw new Error(ErrorMessages.SpreadSheetNotLoaded);
   }
 
   for (const valueRange of sheet.valueRanges) {
     const values = valueRange.values;
 
     if (!values) {
-      throw new Error("Could not find value ranges.");
+      throw new Error(ErrorMessages.SpreadSheetNotLoaded);
     }
 
     let row = -1;
@@ -103,7 +105,7 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
     return tasks;
   }
 
-  throw new Error("Could not find tasks");
+  throw new Error(ErrorMessages.NotInSpreadSheet);
 }
 
 async function getInfo(access_token: string) {
@@ -122,12 +124,14 @@ async function getInfo(access_token: string) {
   .catch((err) => console.log(err));
 }
 
+
 /** Queries the sheet for the data for a specific user. */
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+  console.log("Handling");
   if (!event.queryStringParameters) {
     return {
       statusCode: 400,
-      body: "Could not find any query string parameters."
+      body: ErrorMessages.NoQueryString,
     };
   }
 
@@ -136,7 +140,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   if (!access_token) {
     return {
       statusCode: 400,
-      body: "Could not destructure the access token."
+      body: ErrorMessages.NoAccessToken,
     };
   } 
 
@@ -145,13 +149,15 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   if (!info) {
     return {
       statusCode: 400,
-      body: "Could not determine the user's name."
+      body: ErrorMessages.NoName,
     };
   }
   const { name, email } = info;
 
   const sheet = await getSheet();
-  const data = getTasks(sheet, name, email);
+  const data = getTasks(sheet, "Jackson Moran", email);
+
+  console.log("Returning", data)
 
   return {
     statusCode: 200,

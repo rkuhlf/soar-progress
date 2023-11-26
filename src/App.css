@@ -39,7 +39,8 @@
 }
 
 .task-progress {
-  width: 2em;
+  width: 3em;
+  min-width: max-content;
 }
 
 .task-title {
@@ -80,4 +81,27 @@
 
 button {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+.error {
+  background-color: #FED7D7;
+  padding: 10px;
+  border-radius: 20px;
+  margin: 0 auto;
+  margin-bottom: 30px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+  border: 3px solid #E53E3E;
+
+  width: fit-content;
+}
+
+.error-title {
+  font-weight: bold;
+  color: #C53030;
+}
+
+.error-message {
+  max-width: 20em;
+  padding: 10px;
 }

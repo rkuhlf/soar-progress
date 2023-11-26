@@ -4,6 +4,7 @@ import type { TaskData } from "./Task";
 import Task from "./Task";
 import useSWR from "swr";
 import Spinner from "./Spinner";
+import { ErrorMessages } from "../shared/errors";
 
 
 export type ProfileData = {
@@ -13,10 +14,55 @@ export type ProfileData = {
 };
 
 async function fetcher(url: string) {
-    const data = await fetch(url);
-    console.log(data);
+    const res = await fetch(url)
+ 
+  // If the status code is not in the range 200-299,
+  // we still try to parse and throw it.
+  if (!res.ok) {
+    const error = new Error(await res.text());
+    throw error;
+  }
+  
+  try {
+    return res.json()
+  } catch {
+    throw new Error(ErrorMessages.GeneralParsingError);
+  }
+}
 
-    return await data.json();
+function getErrorMessage(error: Error): string {
+    // We have to clean it up because it adds a stack trace onto the end.
+    console.log(error.message)
+    for (const knownError of Object.values(ErrorMessages)) {
+        console.log("Testing", knownError);
+        if (error.message.includes(knownError)) {
+            return knownError;
+        }
+    }
+
+    return ErrorMessages.UnknownError;
+}
+
+function Content({tasks, error, isLoading}: {tasks: TaskData[], error: Error, isLoading: boolean}) {
+    if (error) {
+        return (
+            <div className="error">
+                <div className="error-title">😞 Error 😞</div>
+
+                <div className="error-message">{getErrorMessage(error)}</div>
+            </div>
+        )
+    }
+
+    if (isLoading) {
+        return <Spinner />;
+    }
+     
+    return <div className="tasks">
+        {
+            tasks && tasks.map((task: TaskData) => <Task task={task} />)
+        }
+    </div>;
 }
 
 /** This is the component that renders all of the information about the progress. */
@@ -43,15 +89,7 @@ export default function Profile() {
             <h1>Hey {profile.name}!</h1>
             <h2>Here's your progress so far</h2>
 
-            {
-                isLoading ?
-                    <Spinner />
-                : <div className="tasks">
-                {
-                    tasks && tasks.map((task: TaskData) => <Task task={task} />)
-                }
-            </div>
-            }
+            <Content tasks={tasks} error={error} isLoading={isLoading} />
 
             <button onClick={() => logOut()}>
                 Log out ✌️
