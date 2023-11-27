@@ -39,12 +39,44 @@ function nameMatches(name: string, firstName: string, lastName: string): boolean
   return `${firstName} ${lastName}` == name || `${lastName} ${firstName}` == name;
 }
 
+const startColumnLookup = {
+  "Pilot Your Potential": 10,
+  "Elevate Your Expectations": 10,
+  "Look To Launch": 10,
+  "Take Flight": 10,
+  "Increase Your Altitude 1": 10,
+  "Increase Your Altitude 2": 10,
+}
+
+const endColumnLookup = {
+  "Pilot Your Potential": 18,
+  "Elevate Your Expectations": 19,
+  "Look To Launch": 17,
+  "Take Flight": 18,
+  "Increase Your Altitude 1": 16,
+  "Increase Your Altitude 2": 16,
+}
+
 function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {
   if (!sheet.valueRanges) {
     throw new Error(ErrorMessages.SpreadSheetNotLoaded);
   }
 
   for (const valueRange of sheet.valueRanges) {
+    let startColumn = -1;
+    let endColumn = -1;
+
+    for (const sheetName in startColumnLookup) {
+      if (valueRange.range?.includes(sheetName)) {
+        startColumn = startColumnLookup[sheetName];
+        endColumn = endColumnLookup[sheetName];
+      }
+    }
+
+    if (startColumn == -1 || endColumn == -1) {
+      throw new Error("Couldn't figure out what the sheet was.")
+    }
+    
     const values = valueRange.values;
 
     if (!values) {
@@ -83,8 +115,7 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
       required: 0,
     }
 
-    let col = 10;
-    while (true) {
+    for (let col = startColumn; col <= endColumn; col++) {
       const name = values[3][col];
       const completed = values[row][col];
 
@@ -96,19 +127,13 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
         };
         tasks.push(currentTask);
       }
-
       
       if (completed == "TRUE") {
         currentTask.completed += 1;
         currentTask.required += 1;
       } else if (completed == "FALSE") {
         currentTask.required += 1;
-      } else {
-        // The first time we get to a spot where they don't have anything, that should be the last task.
-        break;
       }
-
-      col++;
     }
 
     return tasks;
