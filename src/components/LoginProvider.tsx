@@ -68,13 +68,19 @@ export default function LoginProvider({ children }: PropsWithChildren<{}>) {
                         return res.json();
                     })
                     .then((data: any) => {
+                        if (data.error) {
+                            throw new Error(JSON.stringify(data.error));
+                        }
                         setProfile({
                             name: data.given_name,
                             email: data.email,
                             access_token: user.access_token,
                         })
                     })
-                    .catch((err) => console.log(err));
+                    .catch((err) => {
+                        console.log("Couldn't figure out who this user is.")
+                        console.log(err);
+                    });
             }
         },
         [user]

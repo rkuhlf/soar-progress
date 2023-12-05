@@ -7,7 +7,7 @@ import { ErrorMessages } from "../../src/shared/errors";
 
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
-const SHEET_ID = "1SzjlzhnZKmlzCrzb2lx8CE9cUwITn-sT6xZojdFPDv8";
+const SHEET_ID = "10Lf_jVmGdzkVC8Ed-XevhlWIJ_lAAyAUa6g3m6iIAbQ";
 const GOOGLE_SHEET_KEY = process.env.GOOGLE_SHEET_KEY?.split(String.raw`\n`).join('\n');
 
 if (!GOOGLE_SHEET_KEY) {
@@ -28,6 +28,7 @@ async function getSheet() {
     ranges: ["Pilot Your Potential", "Elevate Your Expectations", "Look to Launch", "Take Flight", "Increase Your Altitude 1", "Increase Your Altitude 2"],
     spreadsheetId: SHEET_ID,
   });
+  console.log(res.data);
   
   return res.data;
 }
@@ -161,7 +162,6 @@ async function getInfo(access_token: string) {
 
 /** Queries the sheet for the data for a specific user. */
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
-  console.log("Handling");
   if (!event.queryStringParameters) {
     return {
       statusCode: 400,
@@ -190,8 +190,6 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
   const sheet = await getSheet();
   const data = getTasks(sheet, name, email);
-
-  console.log("Returning", data)
 
   return {
     statusCode: 200,

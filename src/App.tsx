@@ -7,6 +7,7 @@ import { useLoginContext } from './components/LoginProvider';
 
 function App() {
   const { profile } = useLoginContext();
+  console.log("PROFILE", profile);
   
   return (
     <div>
