@@ -3,19 +3,21 @@ import Profile from './components/Profile';
 
 import LoginPage from './components/LoginPage';
 import { useLoginContext } from './components/LoginProvider';
+import FeedbackButton from './components/FeedbackButton';
 
 
 function App() {
   const { profile } = useLoginContext();
-  console.log("PROFILE", profile);
   
   return (
     <div>
-      {profile ? (
-        <Profile />
-      ) : (
-        <LoginPage />
-      )}
+        {profile ? (
+          <Profile />
+        ) : (
+          <LoginPage />
+        )}
+
+      <FeedbackButton />
     </div>
   );
 }

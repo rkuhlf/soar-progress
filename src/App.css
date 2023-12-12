@@ -1,8 +1,11 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
+
+  --padding: 2rem;
   padding: 2rem;
   text-align: center;
+  height: calc(100vh - 2 * var(--padding));
 }
 
 .login-page {
@@ -104,4 +107,17 @@ button {
 .error-message {
   max-width: 20em;
   padding: 10px;
+}
+
+.feedback-button {
+  display: block;
+  margin-top: 1.5rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: #888;
+  text-decoration: underline;
+  width: fit-content;
 }
