@@ -34,7 +34,6 @@ function getErrorMessage(error: Error): string {
     // We have to clean it up because it adds a stack trace onto the end.
     console.log(error.message)
     for (const knownError of Object.values(ErrorMessages)) {
-        console.log("Testing", knownError);
         if (error.message.includes(knownError)) {
             return knownError;
         }

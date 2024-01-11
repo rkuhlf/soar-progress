@@ -28,7 +28,6 @@ async function getSheet() {
     ranges: ["Pilot Your Potential", "Elevate Your Expectations", "Look to Launch", "Take Flight", "Increase Your Altitude 1", "Increase Your Altitude 2"],
     spreadsheetId: SHEET_ID,
   });
-  console.log(res.data);
   
   return res.data;
 }
@@ -40,7 +39,7 @@ function nameMatches(name: string, firstName: string, lastName: string): boolean
   return `${firstName} ${lastName}` == name || `${lastName} ${firstName}` == name;
 }
 
-const startColumnLookup = {
+const startColumnLookupFirstSemester = {
   "Pilot Your Potential": 10,
   "Elevate Your Expectations": 10,
   "Look To Launch": 10,
@@ -49,13 +48,31 @@ const startColumnLookup = {
   "Increase Your Altitude 2": 10,
 }
 
-const endColumnLookup = {
+const endColumnLookupFirstSemester = {
   "Pilot Your Potential": 18,
   "Elevate Your Expectations": 19,
   "Look To Launch": 17,
   "Take Flight": 18,
   "Increase Your Altitude 1": 16,
   "Increase Your Altitude 2": 16,
+}
+
+const startColumnLookupSecondSemester = {
+  "Pilot Your Potential": 20,
+  "Elevate Your Expectations": 20,
+  "Look To Launch": 20,
+  "Take Flight": 20,
+  "Increase Your Altitude 1": 20,
+  "Increase Your Altitude 2": 20,
+}
+
+const endColumnLookupSecondSemester = {
+  "Pilot Your Potential": 26,
+  "Elevate Your Expectations": 28,
+  "Look To Launch": 27,
+  "Take Flight": 28,
+  "Increase Your Altitude 1": 25,
+  "Increase Your Altitude 2": 25,
 }
 
 function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {
@@ -67,10 +84,10 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
     let startColumn = -1;
     let endColumn = -1;
 
-    for (const sheetName in startColumnLookup) {
+    for (const sheetName in startColumnLookupSecondSemester) {
       if (valueRange.range?.includes(sheetName)) {
-        startColumn = startColumnLookup[sheetName];
-        endColumn = endColumnLookup[sheetName];
+        startColumn = startColumnLookupSecondSemester[sheetName];
+        endColumn = endColumnLookupSecondSemester[sheetName];
       }
     }
 
