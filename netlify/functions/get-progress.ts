@@ -76,7 +76,7 @@ const endColumnLookupSecondSemester = {
   "Increase Your Altitude 2": 29,
 }
 
-function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {
+function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {  
   if (!sheet.valueRanges) {
     throw new Error(ErrorMessages.SpreadSheetNotLoaded);
   }

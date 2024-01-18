@@ -5,6 +5,7 @@ import Task from "./Task";
 import useSWR from "swr";
 import Spinner from "./Spinner";
 import { ErrorMessages } from "../shared/errors";
+import { feedbackURL } from "./FeedbackButton";
 
 
 export type ProfileData = {
@@ -32,7 +33,6 @@ async function fetcher(url: string) {
 
 function getErrorMessage(error: Error): string {
     // We have to clean it up because it adds a stack trace onto the end.
-    console.log(error.message)
     for (const knownError of Object.values(ErrorMessages)) {
         if (error.message.includes(knownError)) {
             return knownError;
@@ -48,7 +48,8 @@ function Content({tasks, error, isLoading}: {tasks: TaskData[], error: Error, is
             <div className="error">
                 <div className="error-title">😞 Error 😞</div>
 
-                <div className="error-message">{getErrorMessage(error)}</div>
+                <div className="error-message">{getErrorMessage(error)} <br />
+                <a target="_blank" href={feedbackURL}>Tell us about the problem.</a></div>
             </div>
         )
     }
