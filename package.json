@@ -13,6 +13,7 @@
   "dependencies": {
     "@netlify/functions": "^2.0.2",
     "@react-oauth/google": "^0.11.1",
+    "firebase": "^10.7.2",
     "gapi": "^0.0.3",
     "google-auth-library": "^9.0.0",
     "googleapis": "^126.0.1",

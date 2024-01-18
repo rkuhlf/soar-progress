@@ -6,6 +6,7 @@ import useSWR from "swr";
 import Spinner from "./Spinner";
 import { ErrorMessages } from "../shared/errors";
 import { feedbackURL } from "./FeedbackButton";
+import { useAnalyticsContext } from "./AnalyticsProvider";
 
 
 export type ProfileData = {
@@ -43,12 +44,16 @@ function getErrorMessage(error: Error): string {
 }
 
 function Content({tasks, error, isLoading}: {tasks: TaskData[], error: Error, isLoading: boolean}) {
+    const { logEvent } = useAnalyticsContext();
     if (error) {
+        const message = getErrorMessage(error);
+        logEvent(error.name, error.message);
+        
         return (
             <div className="error">
                 <div className="error-title">😞 Error 😞</div>
 
-                <div className="error-message">{getErrorMessage(error)} <br />
+                <div className="error-message">{message} <br />
                 <a target="_blank" href={feedbackURL}>Tell us about the problem.</a></div>
             </div>
         )
