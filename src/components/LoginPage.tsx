@@ -24,6 +24,7 @@ export default function LoginPage() {
                 <div>
                     <button className="login-button" onClick={() => popOutGoogleLogin()}>Sign in with Google 🚀 </button>
                 </div>
+                <div className="description">Please use your Rice account.</div>
                 <label className="remember-me">
                     <Checkbox checked={shouldRememberLogin} onChange={handleCheckboxChange}/>
                     Remember me

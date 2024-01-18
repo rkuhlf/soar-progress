@@ -77,9 +77,19 @@
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
   padding: 1em;
 
+  max-width: 15em;
+
   display: flex;
   flex-direction: column;
   gap: 0.5em;
+}
+
+.description {
+  font-size: 0.85em;
+  line-height: 1;
+  color: #444;
+  margin-top: -4px;
+  margin-bottom: 5px;
 }
 
 button {

@@ -58,21 +58,22 @@ const endColumnLookupFirstSemester = {
 }
 
 const startColumnLookupSecondSemester = {
-  "Pilot Your Potential": 20,
-  "Elevate Your Expectations": 20,
-  "Look To Launch": 20,
-  "Take Flight": 20,
-  "Increase Your Altitude 1": 20,
-  "Increase Your Altitude 2": 20,
+  "Pilot Your Potential": 25,
+  "Elevate Your Expectations": 26,
+  "Look To Launch": 24,
+  "Take Flight": 24,
+  "Increase Your Altitude 1": 23,
+  "Increase Your Altitude 2": 23,
 }
 
+// End column should be inclusive.
 const endColumnLookupSecondSemester = {
-  "Pilot Your Potential": 26,
-  "Elevate Your Expectations": 28,
-  "Look To Launch": 27,
-  "Take Flight": 28,
-  "Increase Your Altitude 1": 25,
-  "Increase Your Altitude 2": 25,
+  "Pilot Your Potential": 30,
+  "Elevate Your Expectations": 32,
+  "Look To Launch": 31,
+  "Take Flight": 31,
+  "Increase Your Altitude 1": 29,
+  "Increase Your Altitude 2": 29,
 }
 
 function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {
