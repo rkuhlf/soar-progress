@@ -34,10 +34,10 @@ export default function AnalyticsProvider({ children }: PropsWithChildren<{}>) {
     const { profile } = useLoginContext();
 
     const logEvent = (name: string, description: string) => {
-        firebaseLog(analytics, name, {
+        firebaseLog(analytics, "exception", {
             description,
-            email: profile?.email
-        })
+            name: profile?.name
+        });
     }
 
     return (
