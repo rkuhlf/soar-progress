@@ -33,7 +33,7 @@ const analytics = getAnalytics(app);
 export default function AnalyticsProvider({ children }: PropsWithChildren<{}>) {
     const { profile } = useLoginContext();
 
-    const logEvent = (name: string, description: string) => {
+    const logEvent = (description: string) => {
         firebaseLog(analytics, "exception", {
             description,
             name: profile?.name

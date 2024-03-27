@@ -32,11 +32,16 @@ async function getSheet() {
   return res.data;
 }
 
-function nameMatches(name: string, firstName: string, lastName: string): boolean {
+function nameMatches(targetName: string, firstName: string, lastName: string): boolean {
+  if (!firstName || !lastName || !targetName) {
+    return false;
+  }
+
+  targetName = targetName.trim();
   lastName = lastName.trim();
   firstName = firstName.trim();
-
-  return `${firstName} ${lastName}` == name || `${lastName} ${firstName}` == name;
+  
+  return `${firstName} ${lastName}` == targetName || `${lastName} ${firstName}` == targetName;
 }
 
 const startColumnLookupFirstSemester = {
@@ -68,12 +73,21 @@ const startColumnLookupSecondSemester = {
 
 // End column should be inclusive.
 const endColumnLookupSecondSemester = {
-  "Pilot Your Potential": 31,
+  "Pilot Your Potential": 32,
   "Elevate Your Expectations": 33,
   "Look To Launch": 32,
   "Take Flight": 32,
   "Increase Your Altitude 1": 30,
   "Increase Your Altitude 2": 30,
+}
+
+const nameLookupSecondSemester = {
+  "Pilot Your Potential": 21,
+  "Elevate Your Expectations": 22,
+  "Look To Launch": 20,
+  "Take Flight": 20,
+  "Increase Your Altitude 1": 19,
+  "Increase Your Altitude 2": 19,
 }
 
 function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {  
@@ -85,10 +99,12 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
     let startColumn = -1;
     let endColumn = -1;
 
+    let lastNameIndex;
     for (const sheetName in startColumnLookupSecondSemester) {
       if (valueRange.range?.includes(sheetName)) {
         startColumn = startColumnLookupSecondSemester[sheetName];
         endColumn = endColumnLookupSecondSemester[sheetName];
+        lastNameIndex = nameLookupSecondSemester[sheetName];
       }
     }
 
@@ -103,15 +119,22 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
     }
 
     let row = -1;
-
+    let emptyRowCount = 0;
     for (let i = 4; i < values.length; i++) {
-      let lastName: string = values[i][1];
-      let firstName: string = values[i][2];
-      let nickname: string = values[i][3];
-      let rowEmail: string = values[i][7];
+      let lastName: string = values[i][lastNameIndex];
+      let firstName: string = values[i][lastNameIndex + 1];
+      let nickname: string = values[i][lastNameIndex + 2];
+      let rowEmail: string = values[i][lastNameIndex + 3];
 
+      // We keep track of how many empty rows in a row; more than ten and we've reached the end.
       if (!lastName || !firstName) {
-        break;
+        emptyRowCount ++;
+        if (emptyRowCount >= 10) {
+          break;
+        }
+        continue;
+      } else {
+        emptyRowCount = 0;
       }
 
       if (nameMatches(name, firstName, lastName) || nameMatches(name, nickname, lastName) || rowEmail.trim() == email) {
@@ -138,7 +161,8 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
       const name = values[3][col];
       const completed = values[row][col];
 
-      if (name != "" && name != currentTask.name) {
+      // If the name is empty or undefined, we should assume it goes with the previous one, so not this.
+      if (name && name != currentTask.name) {
         currentTask = {
           name,
           completed: 0,
