@@ -32,9 +32,39 @@ async function getSheet() {
   return res.data;
 }
 
+function hasParenthetical(str: string) {
+  return str.includes("(") && str.includes(")");
+}
+
+function splitParenthetical(str: string) {
+  const start = str.indexOf("(");
+  const end = str.indexOf(")");
+  const first = str.substring(0, start);
+  const second = str.substring(start + 1, end);
+
+
+
+  return [first, second];
+}
+
 function nameMatches(targetName: string, firstName: string, lastName: string): boolean {
   if (!firstName || !lastName || !targetName) {
     return false;
+  }
+  
+  if (hasParenthetical(lastName)) {
+    const [first, second] = splitParenthetical(lastName);
+    return nameMatches(targetName, firstName, first) || nameMatches(targetName, firstName, second);
+  }
+
+  if (hasParenthetical(firstName)) {
+    const [first, second] = splitParenthetical(firstName);
+    return nameMatches(targetName, first, lastName) || nameMatches(targetName, second, lastName);
+  }
+
+  if (hasParenthetical(targetName)) {
+    const [first, second] = splitParenthetical(targetName);
+    return nameMatches(first, firstName, lastName) || nameMatches(second, firstName, lastName);
   }
 
   targetName = targetName.trim();
