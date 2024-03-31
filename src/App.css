@@ -3,7 +3,8 @@
   margin: 0 auto;
 
   --padding: 2rem;
-  padding: 2rem;
+  padding: var(--padding);
+  padding-bottom: 6rem;
   text-align: center;
   height: calc(100vh - 2 * var(--padding));
 }
@@ -130,4 +131,11 @@ button {
   color: #888;
   text-decoration: underline;
   width: fit-content;
+}
+
+
+.info {
+  max-width: 20em;
+  margin: 0 auto;
+  margin-bottom: 15px;
 }
