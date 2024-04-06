@@ -120,6 +120,17 @@ const nameLookupSecondSemester = {
   "Increase Your Altitude 2": 19,
 }
 
+const nameEquivalenceClasses = [
+  new Set(["Ben", "Benjamin"])
+];
+
+/**
+ * 
+ * @param sheet 
+ * @param name The name that Google has for this person.
+ * @param email 
+ * @returns 
+ */
 function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {  
   if (!sheet.valueRanges) {
     throw new Error(ErrorMessages.SpreadSheetNotLoaded);
@@ -167,8 +178,35 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
         emptyRowCount = 0;
       }
 
-      if (nameMatches(name, firstName, lastName) || nameMatches(name, nickname, lastName) || rowEmail.trim() == email) {
+      // Iterate through all of the possible variations of the name found in the sheet.
+      const possibleCombos = [
+        [name, firstName, lastName],
+        [name, nickname, lastName],
+      ];
+
+      for (const names of nameEquivalenceClasses) {
+        if (names.has(firstName)) {
+          for (const alternativeName of names) {
+            possibleCombos.push([name, alternativeName, lastName]);
+          }
+        }
+      }
+      let foundMatch = false;
+
+      for (const combo of possibleCombos) {
+        if (nameMatches(combo[0], combo[1], combo[2])) {
+          row = i;
+          foundMatch = true;
+          break;
+        }
+      }
+
+      if (!foundMatch && rowEmail.trim() == email) {
         row = i;
+        foundMatch = true;
+      }
+
+      if (foundMatch) {
         break;
       }
     }
