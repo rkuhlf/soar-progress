@@ -121,7 +121,8 @@ const nameLookupSecondSemester = {
 }
 
 const nameEquivalenceClasses = [
-  new Set(["Ben", "Benjamin"])
+  new Set(["Ben", "Benjamin"]),
+  new Set(["Izzy", "Isabel", "Isabella"]),
 ];
 
 /**

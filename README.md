@@ -19,5 +19,7 @@
 Note: You should also fetch the project periodically. I think that VS Code has a button that does that.
 
 
-<!-- TODO: Add better error messages for server-side errors. -->
-<!-- TODO: Add feedback and what is flight plan buttons. -->
+<!-- TODO: Add some sections at the bottom like an FAQ -->
+<!-- One with "Something I've done isn't showing up!" -->
+<!-- One with "When is everything due?" -->
+<!-- One with "I really want to work on this website." -->
