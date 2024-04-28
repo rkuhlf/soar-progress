@@ -201,8 +201,8 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
           break;
         }
       }
-
-      if (!foundMatch && rowEmail.trim() == email) {
+      
+      if (!foundMatch && rowEmail && rowEmail.trim() == email) {
         row = i;
         foundMatch = true;
       }
