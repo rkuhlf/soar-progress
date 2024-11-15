@@ -92,11 +92,11 @@ export default function Profile() {
     return (
         <>
             <h1>Hey {profile.name}!</h1>
-            <h2>Here's your progress* so far</h2>
+            <h2>Here's your progress so far</h2>
 
             <Content tasks={tasks} error={error} isLoading={isLoading} />
 
-            <div className="info">*It might take a few days for events you've completed to show up. <a target="_blank" href="mailto:ph57@rice.edu">Email Phillip</a> or <a target="_blank" href={feedbackURL}>file an error</a> if something still seems off.</div>
+            {/* <div className="info">*It might take a few days for events you've completed to show up. <a target="_blank" href="mailto:ph57@rice.edu">Email Phillip</a> or <a target="_blank" href={feedbackURL}>file an error</a> if something still seems off.</div> */}
 
             <button onClick={() => logOut()}>
                 Log out ✌️

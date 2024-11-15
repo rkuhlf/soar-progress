@@ -7,7 +7,7 @@ import { ErrorMessages } from "../../src/shared/errors";
 
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
-const SHEET_ID = "10Lf_jVmGdzkVC8Ed-XevhlWIJ_lAAyAUa6g3m6iIAbQ";
+const SHEET_ID = "1f5O1H-XR6goR3GSy-CYepBoQpsup4o8skqChsYR0V3E";
 const GOOGLE_SHEET_KEY = process.env.GOOGLE_SHEET_KEY?.split(String.raw`\n`).join('\n');
 
 if (!GOOGLE_SHEET_KEY) {
@@ -24,11 +24,12 @@ async function getSheet() {
   await client.authorize();
 
   const sheets = google.sheets({version: 'v4', auth: client });
+  // The specific range has to be specified for IYA1 and IYA2 because otherwise it will assume that we are picking column IYA1 for Pilot your Potential for some reason.
   const res = await sheets.spreadsheets.values.batchGet({
-    ranges: ["Pilot Your Potential", "Elevate Your Expectations", "Look to Launch", "Take Flight", "Increase Your Altitude 1", "Increase Your Altitude 2"],
+    ranges: ["Pilot Your Potential", "Elevate Your Expectations", "Look to Launch", "Take Flight", "IYA1!A1:AP100", "IYA2!A1:AP100"],
     spreadsheetId: SHEET_ID,
   });
-  
+
   return res.data;
 }
 
@@ -74,22 +75,24 @@ function nameMatches(targetName: string, firstName: string, lastName: string): b
   return `${firstName} ${lastName}` == targetName || `${lastName} ${firstName}` == targetName;
 }
 
+// Some are set to 11 to skip the hidden column for Launch Pad Training, which is no longer being required.
 const startColumnLookupFirstSemester = {
-  "Pilot Your Potential": 10,
+  "Pilot Your Potential": 11,
   "Elevate Your Expectations": 10,
   "Look To Launch": 10,
-  "Take Flight": 10,
-  "Increase Your Altitude 1": 10,
-  "Increase Your Altitude 2": 10,
+  "Take Flight": 11,
+  "IYA1": 11,
+  "IYA2": 10,
 }
 
+// Currently set to skip the ACH stuff.
 const endColumnLookupFirstSemester = {
-  "Pilot Your Potential": 18,
-  "Elevate Your Expectations": 19,
-  "Look To Launch": 17,
-  "Take Flight": 18,
-  "Increase Your Altitude 1": 16,
-  "Increase Your Altitude 2": 16,
+  "Pilot Your Potential": 17,
+  "Elevate Your Expectations": 18,
+  "Look To Launch": 16,
+  "Take Flight": 17,
+  "IYA1": 16,
+  "IYA2": 16,
 }
 
 const startColumnLookupSecondSemester = {
@@ -97,8 +100,8 @@ const startColumnLookupSecondSemester = {
   "Elevate Your Expectations": 26,
   "Look To Launch": 24,
   "Take Flight": 24,
-  "Increase Your Altitude 1": 23,
-  "Increase Your Altitude 2": 23,
+  "IYA1": 23,
+  "IYA2": 23,
 }
 
 // End column should be inclusive.
@@ -107,17 +110,26 @@ const endColumnLookupSecondSemester = {
   "Elevate Your Expectations": 33,
   "Look To Launch": 32,
   "Take Flight": 32,
-  "Increase Your Altitude 1": 30,
-  "Increase Your Altitude 2": 30,
+  "IYA1": 30,
+  "IYA2": 30,
 }
 
-const nameLookupSecondSemester = {
-  "Pilot Your Potential": 21,
-  "Elevate Your Expectations": 22,
-  "Look To Launch": 20,
-  "Take Flight": 20,
-  "Increase Your Altitude 1": 19,
-  "Increase Your Altitude 2": 19,
+const nameLookupFirstSemester = {
+  "Pilot Your Potential": 1,
+  "Elevate Your Expectations": 1,
+  "Look To Launch": 1,
+  "Take Flight": 1,
+  "IYA1": 1,
+  "IYA2": 1,
+}
+
+const headerRowLookup = {
+  "Pilot Your Potential": 2,
+  "Elevate Your Expectations": 3,
+  "Look To Launch": 3,
+  "Take Flight": 3,
+  "IYA1": 3,
+  "IYA2": 3,
 }
 
 const nameEquivalenceClasses = [
@@ -140,17 +152,19 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
   for (const valueRange of sheet.valueRanges) {
     let startColumn = -1;
     let endColumn = -1;
+    let headerRow = -1;
 
     let lastNameIndex;
-    for (const sheetName in startColumnLookupSecondSemester) {
+    for (const sheetName in startColumnLookupFirstSemester) {
       if (valueRange.range?.includes(sheetName)) {
-        startColumn = startColumnLookupSecondSemester[sheetName];
-        endColumn = endColumnLookupSecondSemester[sheetName];
-        lastNameIndex = nameLookupSecondSemester[sheetName];
+        startColumn = startColumnLookupFirstSemester[sheetName];
+        endColumn = endColumnLookupFirstSemester[sheetName];
+        lastNameIndex = nameLookupFirstSemester[sheetName];
+        headerRow = headerRowLookup[sheetName];
       }
     }
 
-    if (startColumn == -1 || endColumn == -1) {
+    if (startColumn == -1 || endColumn == -1 || headerRow == -1) {
       throw new Error("Couldn't figure out what the sheet was.")
     }
     
@@ -227,7 +241,7 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
     }
 
     for (let col = startColumn; col <= endColumn; col++) {
-      const name = values[3][col];
+      const name = values[headerRow][col];
       const completed = values[row][col];
 
       // If the name is empty or undefined, we should assume it goes with the previous one, so not this.
