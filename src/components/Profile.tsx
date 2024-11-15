@@ -7,6 +7,7 @@ import Spinner from "./Spinner";
 import { ErrorMessages } from "../shared/errors";
 import { feedbackURL } from "./FeedbackButton";
 import { useAnalyticsContext } from "./AnalyticsProvider";
+import FAQ from "./FAQ";
 
 
 export type ProfileData = {
@@ -96,7 +97,8 @@ export default function Profile() {
 
             <Content tasks={tasks} error={error} isLoading={isLoading} />
 
-            {/* <div className="info">*It might take a few days for events you've completed to show up. <a target="_blank" href="mailto:ph57@rice.edu">Email Phillip</a> or <a target="_blank" href={feedbackURL}>file an error</a> if something still seems off.</div> */}
+                
+            {/* <FAQ /> */}
 
             <button onClick={() => logOut()}>
                 Log out ✌️

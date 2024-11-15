@@ -135,6 +135,7 @@ const headerRowLookup = {
 const nameEquivalenceClasses = [
   new Set(["Ben", "Benjamin"]),
   new Set(["Izzy", "Isabel", "Isabella"]),
+  new Set(["Will", "William"]),
 ];
 
 /**
@@ -192,7 +193,7 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
       } else {
         emptyRowCount = 0;
       }
-
+      
       // Iterate through all of the possible variations of the name found in the sheet.
       const possibleCombos = [
         [name, firstName, lastName],
