@@ -77,7 +77,7 @@ function nameMatches(targetName: string, firstName: string, lastName: string): b
 
 // Some are set to 11 to skip the hidden column for Launch Pad Training, which is no longer being required.
 const startColumnLookupFirstSemester = {
-  "Pilot Your Potential": 11,
+  "Pilot Your Potential": 10,
   "Elevate Your Expectations": 10,
   "Look To Launch": 10,
   "Take Flight": 11,

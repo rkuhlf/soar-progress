@@ -7,7 +7,6 @@ import Spinner from "./Spinner";
 import { ErrorMessages } from "../shared/errors";
 import { feedbackURL } from "./FeedbackButton";
 import { useAnalyticsContext } from "./AnalyticsProvider";
-import FAQ from "./FAQ";
 
 
 export type ProfileData = {
