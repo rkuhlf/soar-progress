@@ -317,7 +317,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   const { name, email } = info;
 
   const sheet = await getSheet();
-  const data = getTasks(sheet, "Juan Marais", email);
+  const data = getTasks(sheet, name, email);
 
   return {
     statusCode: 200,
