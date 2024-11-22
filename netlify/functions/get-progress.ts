@@ -136,6 +136,8 @@ const nameEquivalenceClasses = [
   new Set(["Ben", "Benjamin"]),
   new Set(["Izzy", "Isabel", "Isabella"]),
   new Set(["Will", "William"]),
+  // I'm a little confused in this case. I don't think Juan is a nickname for Johannes.
+  new Set(["Juan", "Johannes"]),
 ];
 
 /**
@@ -315,7 +317,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   const { name, email } = info;
 
   const sheet = await getSheet();
-  const data = getTasks(sheet, name, email);
+  const data = getTasks(sheet, "Juan Marais", email);
 
   return {
     statusCode: 200,
