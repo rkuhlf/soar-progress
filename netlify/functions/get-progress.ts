@@ -138,6 +138,7 @@ const nameEquivalenceClasses = [
   new Set(["Will", "William"]),
   // I'm a little confused in this case. I don't think Juan is a nickname for Johannes.
   new Set(["Juan", "Johannes"]),
+  new Set(["Porras", "Porras Jr."]),
 ];
 
 /**
@@ -206,6 +207,12 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
         if (names.has(firstName)) {
           for (const alternativeName of names) {
             possibleCombos.push([name, alternativeName, lastName]);
+          }
+        }
+
+        if (names.has(lastName)) {
+          for (const alternativeName of names) {
+            possibleCombos.push([name, firstName, alternativeName]);
           }
         }
       }
