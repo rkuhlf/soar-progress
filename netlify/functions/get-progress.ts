@@ -139,6 +139,7 @@ const nameEquivalenceClasses = [
   // I'm a little confused in this case. I don't think Juan is a nickname for Johannes.
   new Set(["Juan", "Johannes"]),
   new Set(["Porras", "Porras Jr."]),
+  new Set(["Fer", "Fernanda"]),
 ];
 
 /**
@@ -183,8 +184,7 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
     for (let i = 4; i < values.length; i++) {
       let lastName: string = values[i][lastNameIndex];
       let firstName: string = values[i][lastNameIndex + 1];
-      let nickname: string = values[i][lastNameIndex + 2];
-      let rowEmail: string = values[i][lastNameIndex + 3];
+      let rowEmail: string = values[i][lastNameIndex + 2];
 
       // We keep track of how many empty rows in a row; more than ten and we've reached the end.
       if (!lastName || !firstName) {
@@ -196,36 +196,37 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
       } else {
         emptyRowCount = 0;
       }
+
+      firstName = firstName.trim();
+      lastName = lastName.trim();
       
       // Iterate through all of the possible variations of the name found in the sheet.
-      const possibleCombos = [
-        [name, firstName, lastName],
-        [name, nickname, lastName],
-      ];
+      const possibleCombos: string[][] = [];
 
       for (const names of nameEquivalenceClasses) {
         if (names.has(firstName)) {
           for (const alternativeName of names) {
-            possibleCombos.push([name, alternativeName, lastName]);
+            possibleCombos.push([alternativeName, lastName]);
           }
         }
 
         if (names.has(lastName)) {
           for (const alternativeName of names) {
-            possibleCombos.push([name, firstName, alternativeName]);
+            possibleCombos.push([firstName, alternativeName]);
           }
         }
       }
-      let foundMatch = false;
 
+      let foundMatch = false;
       for (const combo of possibleCombos) {
-        if (nameMatches(combo[0], combo[1], combo[2])) {
+        if (nameMatches(name, combo[0], combo[1])) {
           row = i;
           foundMatch = true;
           break;
         }
       }
       
+      // If we couldn't match on the name, maybe we can still match on the email.
       if (!foundMatch && rowEmail && rowEmail.trim() == email) {
         row = i;
         foundMatch = true;
