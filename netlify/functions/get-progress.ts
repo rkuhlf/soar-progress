@@ -4,6 +4,7 @@ import { JWT } from "google-auth-library";
 import { google, sheets_v4 } from 'googleapis';
 import type { TaskData } from "../../src/components/Task";
 import { ErrorMessages } from "../../src/shared/errors";
+import { start } from "repl";
 
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
@@ -23,7 +24,7 @@ async function getSheet() {
 
   await client.authorize();
 
-  const sheets = google.sheets({version: 'v4', auth: client });
+  const sheets = google.sheets({ version: 'v4', auth: client });
   // The specific range has to be specified for IYA1 and IYA2 because otherwise it will assume that we are picking column IYA1 for Pilot your Potential for some reason.
   const res = await sheets.spreadsheets.values.batchGet({
     ranges: ["Pilot Your Potential", "Elevate Your Expectations", "Look to Launch", "Take Flight", "IYA1!A1:AP100", "IYA2!A1:AP100"],
@@ -52,7 +53,7 @@ function nameMatches(targetName: string, firstName: string, lastName: string): b
   if (!firstName || !lastName || !targetName) {
     return false;
   }
-  
+
   if (hasParenthetical(lastName)) {
     const [first, second] = splitParenthetical(lastName);
     return nameMatches(targetName, firstName, first) || nameMatches(targetName, firstName, second);
@@ -71,7 +72,7 @@ function nameMatches(targetName: string, firstName: string, lastName: string): b
   targetName = targetName.trim();
   lastName = lastName.trim();
   firstName = firstName.trim();
-  
+
   return `${firstName} ${lastName}` == targetName || `${lastName} ${firstName}` == targetName;
 }
 
@@ -136,145 +137,205 @@ const nameEquivalenceClasses = [
   new Set(["Ben", "Benjamin"]),
   new Set(["Izzy", "Isabel", "Isabella"]),
   new Set(["Will", "William"]),
-  // I'm a little confused in this case. I don't think Juan is a nickname for Johannes.
+  // Interesting nickname - Juan here is pronounced you-on; this guy is from South Africa.
   new Set(["Juan", "Johannes"]),
   new Set(["Porras", "Porras Jr."]),
   new Set(["Fer", "Fernanda"]),
   new Set(["Allie", "Alexandra"]),
 ];
 
+function findUserRow(values: string[][], indices: Indices, targetName: string, targetEmail: string): number | null {
+  let emptyRowCount = 0;
+
+  // Iterate through the columns.
+  for (let row = 4; row < values.length; row++) {
+    let lastName: string = values[row][indices.lastNameColumn];
+    let firstName: string = values[row][indices.firstNameColumn];
+    let nickname: string = indices.nicknameColumn ? values[row][indices.nicknameColumn] : "";
+
+    // We keep track of how many empty rows in a row; more than ten and we've reached the end.
+    if (!lastName || !firstName) {
+      emptyRowCount++;
+      if (emptyRowCount >= 10) {
+        return null;
+      }
+      continue;
+    } else {
+      emptyRowCount = 0;
+    }
+
+    firstName = firstName.trim();
+    lastName = lastName.trim();
+
+    // Iterate through all of the possible variations of the name found in the sheet.
+    const possibleCombos: string[][] = [[firstName, lastName], [nickname, lastName]];
+
+    for (const names of nameEquivalenceClasses) {
+      if (names.has(firstName)) {
+        for (const alternativeName of names) {
+          possibleCombos.push([alternativeName, lastName]);
+        }
+      }
+
+      if (names.has(lastName)) {
+        for (const alternativeName of names) {
+          possibleCombos.push([firstName, alternativeName]);
+        }
+      }
+    }
+
+    let foundMatch = false;
+    for (const combo of possibleCombos) {
+      if (nameMatches(targetName, combo[0], combo[1])) {
+        return row;
+      }
+    }
+
+    // If we couldn't match on the name, maybe we can still match on the email.
+    let rowEmail: string = values[row][indices.emailColumn];
+    if (!foundMatch && rowEmail && rowEmail.trim() == targetEmail) {
+      return row;
+    }
+  }
+
+  return null;
+}
+
+
+function parseTasks(values: string[][], row: number, headerRow: number, startColumn: number, endColumn: number): TaskData[] {
+  // Iterate over all of the tasks that are on the list.
+  const tasks: TaskData[] = [];
+
+  let currentTask = {
+    name: "",
+    completed: 0,
+    required: 0,
+  }
+
+  for (let col = startColumn; col <= endColumn; col++) {
+    const name = values[headerRow][col];
+    const completed = values[row][col];
+
+    // If the name is empty or undefined, we should assume it goes with the previous one, so not this.
+    if (name && name != currentTask.name) {
+      currentTask = {
+        name,
+        completed: 0,
+        required: 0,
+      };
+      tasks.push(currentTask);
+    }
+
+    if (completed == "TRUE") {
+      currentTask.completed += 1;
+      currentTask.required += 1;
+    } else if (completed == "FALSE") {
+      currentTask.required += 1;
+    }
+  }
+
+  return tasks;
+}
+
+
+type Indices = {
+  taskStartColumn: number,
+  taskEndColumn: number,
+  firstNameColumn: number,
+  nicknameColumn?: number,
+  lastNameColumn: number,
+  emailColumn: number,
+  headerRow: number
+};
+
+// TODO: Change this to look through and see which column is the one with the email.
+function getIndicesForSheet(sheet: sheets_v4.Schema$ValueRange): Indices | null {
+  for (const sheetName in startColumnLookupFirstSemester) {
+    if (sheet.range?.includes(sheetName)) {
+      const values = sheet.values;
+      if (!values) {
+        throw new Error(ErrorMessages.SpreadSheetNotLoaded);
+      }
+  
+      const headerRow = headerRowLookup[sheetName];
+
+      let emailColumn;
+      let nicknameColumn
+
+      let emptyCells = 0;
+      // Look through the columns to see which have the right labels.
+      for (let column = 0; emptyCells < 10 && column < values[headerRow].length; column++) {
+        // If it's empty, we make note of that then skip to the next cell.
+        if (!values[headerRow][column]) {
+          emptyCells++;
+          continue;
+        } else {
+          emptyCells = 0;
+        }
+
+        if (values[headerRow][column].trim().toLowerCase() == "email") {
+          emailColumn = column;
+        }
+
+        if (values[headerRow][column].trim().toLowerCase() == "preferred name") {
+          nicknameColumn = column;
+        }
+      }
+
+      if (!emailColumn) {
+        console.info("No email column so returning null.");
+        return null;
+      }
+
+      return {
+        taskStartColumn: startColumnLookupFirstSemester[sheetName],
+        taskEndColumn: endColumnLookupFirstSemester[sheetName],
+        lastNameColumn: nameLookupFirstSemester[sheetName],
+        emailColumn,
+        firstNameColumn: nameLookupFirstSemester[sheetName] + 1,
+        nicknameColumn,
+        headerRow,
+      }
+    }
+  }
+
+  return null;
+}
+
 /**
  * 
- * @param sheet 
+ * @param spreadsheet 
  * @param name The name that Google has for this person.
  * @param email 
  * @returns 
  */
-function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {  
-  if (!sheet.valueRanges) {
+function getTasks(spreadsheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {
+  if (!spreadsheet.valueRanges) {
     throw new Error(ErrorMessages.SpreadSheetNotLoaded);
   }
 
-  for (const valueRange of sheet.valueRanges) {
-    let startColumn = -1;
-    let endColumn = -1;
-    let headerRow = -1;
+  // Loop through the sheets of this spreadsheet.
+  for (const sheet of spreadsheet.valueRanges) {
 
-    let lastNameIndex;
-    for (const sheetName in startColumnLookupFirstSemester) {
-      if (valueRange.range?.includes(sheetName)) {
-        startColumn = startColumnLookupFirstSemester[sheetName];
-        endColumn = endColumnLookupFirstSemester[sheetName];
-        lastNameIndex = nameLookupFirstSemester[sheetName];
-        headerRow = headerRowLookup[sheetName];
-      }
-    }
-
-    if (startColumn == -1 || endColumn == -1 || headerRow == -1) {
+    const indices = getIndicesForSheet(sheet);
+    if (indices == null) {
+      // We expect this never to happen because we only queried for the sheets that we know about, and no additional sheets.
       throw new Error("Couldn't figure out what the sheet was.")
     }
     
-    const values = valueRange.values;
-
+    const values = sheet.values;
     if (!values) {
       throw new Error(ErrorMessages.SpreadSheetNotLoaded);
     }
 
-    let row = -1;
-    let emptyRowCount = 0;
-    for (let i = 4; i < values.length; i++) {
-      let lastName: string = values[i][lastNameIndex];
-      let firstName: string = values[i][lastNameIndex + 1];
-      let rowEmail: string = values[i][lastNameIndex + 2];
-
-      // We keep track of how many empty rows in a row; more than ten and we've reached the end.
-      if (!lastName || !firstName) {
-        emptyRowCount ++;
-        if (emptyRowCount >= 10) {
-          break;
-        }
-        continue;
-      } else {
-        emptyRowCount = 0;
-      }
-
-      firstName = firstName.trim();
-      lastName = lastName.trim();
-      
-      // Iterate through all of the possible variations of the name found in the sheet.
-      const possibleCombos: string[][] = [[firstName, lastName]];
-
-      for (const names of nameEquivalenceClasses) {
-        if (names.has(firstName)) {
-          for (const alternativeName of names) {
-            possibleCombos.push([alternativeName, lastName]);
-          }
-        }
-
-        if (names.has(lastName)) {
-          for (const alternativeName of names) {
-            possibleCombos.push([firstName, alternativeName]);
-          }
-        }
-      }
-
-      let foundMatch = false;
-      for (const combo of possibleCombos) {
-        if (nameMatches(name, combo[0], combo[1])) {
-          row = i;
-          foundMatch = true;
-          break;
-        }
-      }
-      
-      // If we couldn't match on the name, maybe we can still match on the email.
-      if (!foundMatch && rowEmail && rowEmail.trim() == email) {
-        row = i;
-        foundMatch = true;
-      }
-
-      if (foundMatch) {
-        break;
-      }
-    }
+    const row = findUserRow(values, indices, name, email);
 
     // We didn't find them in this one.
-    if (row == -1) {
+    if (row == null) {
       continue;
     }
 
-    // Iterate over all of the tasks that are on the list.
-    const tasks: TaskData[] = [];
-
-    let currentTask = {
-      name: "",
-      completed: 0,
-      required: 0,
-    }
-
-    for (let col = startColumn; col <= endColumn; col++) {
-      const name = values[headerRow][col];
-      const completed = values[row][col];
-
-      // If the name is empty or undefined, we should assume it goes with the previous one, so not this.
-      if (name && name != currentTask.name) {
-        currentTask = {
-          name,
-          completed: 0,
-          required: 0,
-        };
-        tasks.push(currentTask);
-      }
-      
-      if (completed == "TRUE") {
-        currentTask.completed += 1;
-        currentTask.required += 1;
-      } else if (completed == "FALSE") {
-        currentTask.required += 1;
-      }
-    }
-
-    return tasks;
+    return parseTasks(values, row, indices.headerRow, indices.taskStartColumn, indices.taskEndColumn);
   }
 
   throw new Error(ErrorMessages.NotInSpreadSheet);
@@ -287,13 +348,13 @@ async function getInfo(access_token: string) {
       Accept: 'application/json'
     }
   })
-  .then((res) => {
-    return res.json();
-  })
-  .then((data: any): {name: string, email: string} => {
-    return {name: data.name, email: data.email};
-  })
-  .catch((err) => console.log(err));
+    .then((res) => {
+      return res.json();
+    })
+    .then((data: any): { name: string, email: string } => {
+      return { name: data.name, email: data.email };
+    })
+    .catch((err) => console.log(err));
 }
 
 
@@ -313,7 +374,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       statusCode: 400,
       body: ErrorMessages.NoAccessToken,
     };
-  } 
+  }
 
   const info = await getInfo(access_token);
 
