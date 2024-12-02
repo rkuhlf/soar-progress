@@ -140,6 +140,7 @@ const nameEquivalenceClasses = [
   new Set(["Juan", "Johannes"]),
   new Set(["Porras", "Porras Jr."]),
   new Set(["Fer", "Fernanda"]),
+  new Set(["Allie", "Alexandra"]),
 ];
 
 /**
@@ -201,7 +202,7 @@ function getTasks(sheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, 
       lastName = lastName.trim();
       
       // Iterate through all of the possible variations of the name found in the sheet.
-      const possibleCombos: string[][] = [];
+      const possibleCombos: string[][] = [[firstName, lastName]];
 
       for (const names of nameEquivalenceClasses) {
         if (names.has(firstName)) {
