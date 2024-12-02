@@ -18,6 +18,9 @@
 
 Note: You should also fetch the project periodically. I think that VS Code has a button that does that.
 
+## Analytics
+Analytics is through firebase (at console.firebase.google.com), email rilstarssun@gmail.com if there are concerns.
+
 
 <!-- TODO: Add some sections at the bottom like an FAQ -->
 <!-- One with "Something I've done isn't showing up!" -->
