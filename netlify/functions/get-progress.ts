@@ -10,6 +10,8 @@ import { start } from "repl";
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 const SHEET_ID = "1f5O1H-XR6goR3GSy-CYepBoQpsup4o8skqChsYR0V3E";
 const GOOGLE_SHEET_KEY = process.env.GOOGLE_SHEET_KEY?.split(String.raw`\n`).join('\n');
+// In addition to updating this, you have to update all of the indices where the columns are, e.g. startColumnLookup.
+const IS_SPRING = true;
 
 if (!GOOGLE_SHEET_KEY) {
   throw Error("Could not determine google sheet key.");
@@ -76,53 +78,60 @@ function nameMatches(targetName: string, firstName: string, lastName: string): b
   return `${firstName} ${lastName}` == targetName || `${lastName} ${firstName}` == targetName;
 }
 
-// Some are set to 11 to skip the hidden column for Launch Pad Training, which is no longer being required.
-const startColumnLookupFirstSemester = {
-  "Pilot Your Potential": 10,
-  "Elevate Your Expectations": 10,
-  "Look To Launch": 10,
-  "Take Flight": 11,
-  "IYA1": 11,
-  "IYA2": 10,
+const startColumnLookup = {
+  "Pilot Your Potential": 27,
+  "Elevate Your Expectations": 28,
+  "Look To Launch": 26,
+  "Take Flight": 28,
+  "IYA1": 26,
+  "IYA2": 26,
 }
+
+// Some are set to 11 to skip the hidden column for Launch Pad Training, which is no longer being required.
+
+// startColumn lookup for first semester.
+// "Pilot Your Potential": 10,
+// "Elevate Your Expectations": 10,
+// "Look To Launch": 10,
+// "Take Flight": 11,
+// "IYA1": 11,
+// "IYA2": 10,
+
 
 // Currently set to skip the ACH stuff.
-const endColumnLookupFirstSemester = {
-  "Pilot Your Potential": 17,
-  "Elevate Your Expectations": 18,
-  "Look To Launch": 16,
-  "Take Flight": 17,
-  "IYA1": 16,
-  "IYA2": 16,
-}
-
-const startColumnLookupSecondSemester = {
-  "Pilot Your Potential": 25,
-  "Elevate Your Expectations": 26,
-  "Look To Launch": 24,
-  "Take Flight": 24,
-  "IYA1": 23,
-  "IYA2": 23,
-}
-
 // End column should be inclusive.
-const endColumnLookupSecondSemester = {
-  "Pilot Your Potential": 32,
-  "Elevate Your Expectations": 33,
-  "Look To Launch": 32,
-  "Take Flight": 32,
-  "IYA1": 30,
-  "IYA2": 30,
+const endColumnLookup = {
+  "Pilot Your Potential": 34,
+  "Elevate Your Expectations": 35,
+  "Look To Launch": 34,
+  "Take Flight": 35,
+  "IYA1": 31, // TODO: This is purposefully excluding the last column, which shouldn't be there, but I think that they're supposed to add the launchpad training as well.
+  "IYA2": 32,
 }
 
-const nameLookupFirstSemester = {
-  "Pilot Your Potential": 1,
-  "Elevate Your Expectations": 1,
-  "Look To Launch": 1,
-  "Take Flight": 1,
-  "IYA1": 1,
-  "IYA2": 1,
+// First semester numbers
+// "Pilot Your Potential": 17,
+// "Elevate Your Expectations": 18,
+// "Look To Launch": 16,
+// "Take Flight": 17,
+// "IYA1": 16,
+// "IYA2": 16,
+
+const nameLookup = {
+  "Pilot Your Potential": 22,
+  "Elevate Your Expectations": 23,
+  "Look To Launch": 21,
+  "Take Flight": 22,
+  "IYA1": 21,
+  "IYA2": 21,
 }
+
+// "Pilot Your Potential": 1,
+// "Elevate Your Expectations": 1,
+// "Look To Launch": 1,
+// "Take Flight": 1,
+// "IYA1": 1,
+// "IYA2": 1,
 
 const headerRowLookup = {
   "Pilot Your Potential": 2,
@@ -248,17 +257,18 @@ type Indices = {
   headerRow: number
 };
 
-// TODO: Change this to look through and see which column is the one with the email.
-function getIndicesForSheet(sheet: sheets_v4.Schema$ValueRange): Indices | null {
-  for (const sheetName in startColumnLookupFirstSemester) {
+function getIndicesForSheet(sheet: sheets_v4.Schema$ValueRange, spring: boolean): Indices | null {
+  for (const sheetName in startColumnLookup) {
     if (sheet.range?.includes(sheetName)) {
       const values = sheet.values;
       if (!values) {
         throw new Error(ErrorMessages.SpreadSheetNotLoaded);
       }
-  
+
       const headerRow = headerRowLookup[sheetName];
 
+      let seenEmail = false;
+      let seenNickname = false;
       let emailColumn;
       let nicknameColumn
 
@@ -274,11 +284,20 @@ function getIndicesForSheet(sheet: sheets_v4.Schema$ValueRange): Indices | null 
         }
 
         if (values[headerRow][column].trim().toLowerCase() == "email") {
-          emailColumn = column;
+          // If it's the spring, we need to take the second email column.
+          if (spring && !seenEmail) {
+            seenEmail = true;
+          } else {
+            emailColumn = column;
+          }
         }
 
         if (values[headerRow][column].trim().toLowerCase() == "preferred name") {
-          nicknameColumn = column;
+          if (spring && !seenNickname) {
+            seenNickname = true;
+          } else {
+            nicknameColumn = column;
+          }
         }
       }
 
@@ -288,11 +307,12 @@ function getIndicesForSheet(sheet: sheets_v4.Schema$ValueRange): Indices | null 
       }
 
       return {
-        taskStartColumn: startColumnLookupFirstSemester[sheetName],
-        taskEndColumn: endColumnLookupFirstSemester[sheetName],
-        lastNameColumn: nameLookupFirstSemester[sheetName],
+        taskStartColumn: startColumnLookup[sheetName],
+        taskEndColumn: endColumnLookup[sheetName],
+        lastNameColumn: nameLookup[sheetName],
         emailColumn,
-        firstNameColumn: nameLookupFirstSemester[sheetName] + 1,
+        // Assume the first name is the next column after the last name.
+        firstNameColumn: nameLookup[sheetName] + 1,
         nicknameColumn,
         headerRow,
       }
@@ -317,12 +337,12 @@ function getTasks(spreadsheet: sheets_v4.Schema$BatchGetValuesResponse, name: st
   // Loop through the sheets of this spreadsheet.
   for (const sheet of spreadsheet.valueRanges) {
 
-    const indices = getIndicesForSheet(sheet);
+    const indices = getIndicesForSheet(sheet, IS_SPRING);
     if (indices == null) {
       // We expect this never to happen because we only queried for the sheets that we know about, and no additional sheets.
       throw new Error("Couldn't figure out what the sheet was.")
     }
-    
+
     const values = sheet.values;
     if (!values) {
       throw new Error(ErrorMessages.SpreadSheetNotLoaded);
