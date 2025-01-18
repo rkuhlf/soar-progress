@@ -17,7 +17,7 @@ if (!GOOGLE_SHEET_KEY) {
   throw Error("Could not determine google sheet key.");
 }
 
-async function getSheet() {
+async function loadSpreadSheet(): Promise<sheets_v4.Schema$BatchGetValuesResponse> {
   const client = new JWT({
     email: "service@testing-for-soar-progress.iam.gserviceaccount.com",
     key: GOOGLE_SHEET_KEY,
@@ -82,12 +82,10 @@ const startColumnLookup = {
   "Pilot Your Potential": 27,
   "Elevate Your Expectations": 28,
   "Look To Launch": 26,
-  "Take Flight": 28,
+  "Take Flight": 27,
   "IYA1": 26,
   "IYA2": 26,
 }
-
-// Some are set to 11 to skip the hidden column for Launch Pad Training, which is no longer being required.
 
 // startColumn lookup for first semester.
 // "Pilot Your Potential": 10,
@@ -105,7 +103,7 @@ const endColumnLookup = {
   "Elevate Your Expectations": 35,
   "Look To Launch": 34,
   "Take Flight": 35,
-  "IYA1": 31, // TODO: This is purposefully excluding the last column, which shouldn't be there, but I think that they're supposed to add the launchpad training as well.
+  "IYA1": 32,
   "IYA2": 32,
 }
 
@@ -327,9 +325,9 @@ function getIndicesForSheet(sheet: sheets_v4.Schema$ValueRange, spring: boolean)
  * @param spreadsheet 
  * @param name The name that Google has for this person.
  * @param email 
- * @returns 
+ * @returns The sheet of the spreadsheet that the person was found in.
  */
-function getTasks(spreadsheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): TaskData[] {
+function getSheet(spreadsheet: sheets_v4.Schema$BatchGetValuesResponse, name: string, email: string): sheets_v4.Schema$ValueRange {
   if (!spreadsheet.valueRanges) {
     throw new Error(ErrorMessages.SpreadSheetNotLoaded);
   }
@@ -350,15 +348,55 @@ function getTasks(spreadsheet: sheets_v4.Schema$BatchGetValuesResponse, name: st
 
     const row = findUserRow(values, indices, name, email);
 
-    // We didn't find them in this one.
-    if (row == null) {
-      continue;
+    // We found them!.
+    if (row != null) {
+      return sheet;
     }
+  }
 
+  throw new Error(ErrorMessages.NotInSpreadSheet);
+}
+
+function getTasks(sheet: sheets_v4.Schema$ValueRange, name: string, email: string): TaskData[] {
+  const indices = getIndicesForSheet(sheet, IS_SPRING);
+  if (indices == null) {
+    // We expect this never to happen because we only queried for the sheets that we know about, and no additional sheets.
+    throw new Error("Couldn't figure out what the sheet was.")
+  }
+
+  const values = sheet.values;
+  if (!values) {
+    throw new Error(ErrorMessages.SpreadSheetNotLoaded);
+  }
+
+  const row = findUserRow(values, indices, name, email);
+
+  // We found them!.
+  if (row != null) {
     return parseTasks(values, row, indices.headerRow, indices.taskStartColumn, indices.taskEndColumn);
   }
 
   throw new Error(ErrorMessages.NotInSpreadSheet);
+}
+
+function trimCharacter(str: string, char: string) {
+  const escapedChar = char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special regex characters
+  const regex = new RegExp(`^${escapedChar}+|${escapedChar}+$`, 'g');
+  return str.replace(regex, '');
+}
+
+function getSheetName(sheet: sheets_v4.Schema$ValueRange) {
+  if (!sheet.range) {
+    throw new Error("Sheet range was not string");
+  }
+
+  const exclamationMark = sheet.range.indexOf("!");
+  if (exclamationMark == -1) {
+    return sheet.range;
+  }
+
+  const name = sheet.range.substring(0, exclamationMark)
+  return trimCharacter(name, "'");
 }
 
 async function getInfo(access_token: string) {
@@ -406,8 +444,12 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   }
   const { name, email } = info;
 
-  const sheet = await getSheet();
-  const data = getTasks(sheet, name, email);
+  const spreadsheet = await loadSpreadSheet();
+  const sheet = getSheet(spreadsheet, name, email);
+  const data = {
+    year: getSheetName(sheet),
+    tasks: getTasks(sheet, name, email),
+  } 
 
   return {
     statusCode: 200,
@@ -416,3 +458,4 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 };
 
 export { handler };
+

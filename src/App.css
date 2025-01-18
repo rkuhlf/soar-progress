@@ -163,3 +163,10 @@ button {
 .explanations p {
   margin: 0;
 }
+
+.asterisk-note {
+  width: 30rem;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+  font-size: 0.9rem;
+}

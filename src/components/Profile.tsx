@@ -43,7 +43,7 @@ function getErrorMessage(error: Error): string {
     return ErrorMessages.UnknownError;
 }
 
-function Content({tasks, error, isLoading}: {tasks: TaskData[], error: Error, isLoading: boolean}) {
+function Content({data, error, isLoading}: {data: {tasks: TaskData[], year: string}, error: Error, isLoading: boolean}) {
     const { logEvent } = useAnalyticsContext();
     if (error) {
         const message = getErrorMessage(error);
@@ -62,10 +62,31 @@ function Content({tasks, error, isLoading}: {tasks: TaskData[], error: Error, is
     if (isLoading) {
         return <Spinner />;
     }
+
+    if (!data || !data.tasks) {
+        return;
+    }
+
+    data.tasks.sort((a: TaskData, b: TaskData): number => {
+        return a.required - b.required;
+    });
      
-    return <div className="tasks">
+    return <div>
+        <div className="tasks">
+            {
+                data.tasks.map((task: TaskData) => {
+                    if (data.year == "Elevate Your Expectations" && (task.name != "Community Service Hours" && task.name != "Launchpad Self-Guided Training")) {
+                        return <Task task={task} asterisk />
+                    }
+                    return <Task task={task} />
+                }
+            )
+            }
+        </div>
         {
-            tasks && tasks.map((task: TaskData) => <Task task={task} />)
+            data.year == "Elevate Your Expectations" && <div className="asterisk-note">
+                *If you complete UNIV 212, only the Launchpad self-guided training and community service hours are required. 
+            </div>
         }
     </div>;
 }
@@ -84,17 +105,17 @@ export default function Profile() {
     }
 
     // We send the access token, because that is the thing that should be really hard to fake.
-    const { data : tasks, error, isLoading } = useSWR(`/.netlify/functions/get-progress?access_token=${profile.access_token}`, fetcher);
+    const { data, error, isLoading } = useSWR(`/.netlify/functions/get-progress?access_token=${profile.access_token}`, fetcher);
     useEffect(() => {
-        console.log(tasks, error, isLoading);
-    }, [tasks, error, isLoading]);
+        console.log(data, error, isLoading);
+    }, [data, error, isLoading]);
 
     return (
         <>
             <h1>Hey {profile.name}!</h1>
             <h2>Here's your progress so far</h2>
 
-            <Content tasks={tasks} error={error} isLoading={isLoading} />
+            <Content data={data} error={error} isLoading={isLoading} />
 
                 
             {/* <FAQ /> */}

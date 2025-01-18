@@ -6,7 +6,7 @@ export type TaskData = {
 }
 
 
-export default function Task({ task } : { task: TaskData }) {
+export default function Task({ task, asterisk } : { task: TaskData, asterisk?: boolean }) {
     const finishedTask = task.completed >= task.required
     return (
         <div className={`task ${finishedTask ? "task-completed" : ""}`}>
@@ -19,7 +19,7 @@ export default function Task({ task } : { task: TaskData }) {
             </span>
 
             <span className="task-title">
-                {task.name}
+                {task.name + (asterisk ? "*" : "")}
             </span>
         </div>
     )
