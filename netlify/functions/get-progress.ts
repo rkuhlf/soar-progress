@@ -283,11 +283,18 @@ function getIndicesForSheet(sheet: sheets_v4.Schema$ValueRange, spring: boolean)
         }
 
         if (values[headerRow][column].trim().toLowerCase() == "email") {
-          // If it's the spring, we need to take the second email column.
-          if (spring && !seenEmail) {
-            seenEmail = true;
-          } else {
-            emailColumn = column;
+
+          if (spring) { // If it's the spring, we need to take the second email column.
+            if (!seenEmail) {
+              seenEmail = true;
+            } else {
+              emailColumn = column;
+            }
+          } else { // If it's the fall and we've seen the email column, just ignore it.
+            if (!seenEmail) {
+              seenEmail = true;
+              emailColumn = column;
+            }
           }
         }
 
@@ -335,7 +342,6 @@ function getSheet(spreadsheet: sheets_v4.Schema$BatchGetValuesResponse, name: st
 
   // Loop through the sheets of this spreadsheet.
   for (const sheet of spreadsheet.valueRanges) {
-
     const indices = getIndicesForSheet(sheet, IS_SPRING);
     if (indices == null) {
       // We expect this never to happen because we only queried for the sheets that we know about, and no additional sheets.
