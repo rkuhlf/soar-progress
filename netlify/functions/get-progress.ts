@@ -11,7 +11,7 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 const SHEET_ID = "1wmBYYc2s6NFeIJZIScO6k_6X0W3LMSseECwwpKHNZ2w";
 const GOOGLE_SHEET_KEY = process.env.GOOGLE_SHEET_KEY?.split(String.raw`\n`).join('\n');
 // In addition to updating this, you have to update all of the indices where the columns are, e.g. startColumnLookup.
-const IS_SPRING = false;
+const IS_SPRING = true;
 
 if (!GOOGLE_SHEET_KEY) {
   throw Error("Could not determine google sheet key.");
@@ -79,59 +79,60 @@ function nameMatches(targetName: string, firstName: string, lastName: string): b
 }
 
 const startColumnLookup = {
-  "Pilot Your Potential": 5,
-  "Elevate Your Expectations": 5,
-  "Look To Launch": 5,
-  "Take Flight": 5, // f
-  "IYA1": 5,
-  "IYA2": 5,
+// startColumn lookup for first semester.
+  // "Pilot Your Potential": 5,
+  // "Elevate Your Expectations": 5,
+  // "Look To Launch": 5,
+  // "Take Flight": 5, // f
+  // "IYA1": 5,
+  // "IYA2": 5,
+
+  // startColumn lookup for second semester.
+  "Pilot Your Potential": 19, // t
+  "Elevate Your Expectations": 20,
+  "Look To Launch": 18,
+  "Take Flight": 18,
+  "IYA1": 17,
+  "IYA2": 17,
 }
-
-// startColumn lookup for second semester.
-// "Pilot Your Potential": 27,
-//   "Elevate Your Expectations": 28,
-//   "Look To Launch": 26,
-//   "Take Flight": 27,
-//   "IYA1": 26,
-//   "IYA2": 26,
-
 
 // Currently set to skip the ACH stuff.
 // End column should be inclusive.
 const endColumnLookup = {
-  "Pilot Your Potential": 13,
-  "Elevate Your Expectations": 14,
-  "Look To Launch": 12,
-  "Take Flight": 12, // m
-  "IYA1": 11,
-  "IYA2": 11,
+  // End column lookup for the first semester.
+  // "Pilot Your Potential": 13,
+  // "Elevate Your Expectations": 14,
+  // "Look To Launch": 12,
+  // "Take Flight": 12, // m
+  // "IYA1": 11,
+  // "IYA2": 11,
+  // End column lookup for the second semester.
+  "Pilot Your Potential": 26, // AA
+  "Elevate Your Expectations": 27,
+  "Look To Launch": 26,
+  "Take Flight": 26, // m
+  "IYA1": 23,
+  "IYA2": 23,
 }
-
-// Second semester numbers
-// "Pilot Your Potential": 34,
-// "Elevate Your Expectations": 35,
-// "Look To Launch": 34,
-// "Take Flight": 35,
-// "IYA1": 32,
-// "IYA2": 32,
-
 
 const nameLookup = {
-  "Pilot Your Potential": 1,
-  "Elevate Your Expectations": 1,
-  "Look To Launch": 1,
-  "Take Flight": 1,
-  "IYA1": 1,
-  "IYA2": 1,
+  // First semester numbers
+  // "Pilot Your Potential": 1,
+  // "Elevate Your Expectations": 1,
+  // "Look To Launch": 1,
+  // "Take Flight": 1,
+  // "IYA1": 1,
+  // "IYA2": 1,
+  // Second semester numbers
+  "Pilot Your Potential": 16, // q
+  "Elevate Your Expectations": 17,
+  "Look To Launch": 15,
+  "Take Flight": 15,
+  "IYA1": 14,
+  "IYA2": 14,
 }
 
-// "Pilot Your Potential": 22,
-// "Elevate Your Expectations": 23,
-// "Look To Launch": 21,
-// "Take Flight": 22,
-// "IYA1": 21,
-// "IYA2": 21,
-
+// These don't need to be changed each semester.
 const headerRowLookup = {
   "Pilot Your Potential": 2,
   "Elevate Your Expectations": 3,
@@ -156,7 +157,7 @@ function findUserRow(values: string[][], indices: Indices, targetName: string, t
   let emptyRowCount = 0;
 
   // Iterate through the columns.
-  for (let row = 4; row < values.length; row++) {
+  for (let row = 3; row < values.length; row++) {
     let lastName: string = values[row][indices.lastNameColumn];
     let firstName: string = values[row][indices.firstNameColumn];
     let nickname: string = indices.nicknameColumn ? values[row][indices.nicknameColumn] : "";
@@ -281,9 +282,8 @@ function getIndicesForSheet(sheet: sheets_v4.Schema$ValueRange, spring: boolean)
         } else {
           emptyCells = 0;
         }
-
+        
         if (values[headerRow][column].trim().toLowerCase() == "email") {
-
           if (spring) { // If it's the spring, we need to take the second email column.
             if (!seenEmail) {
               seenEmail = true;
@@ -308,7 +308,10 @@ function getIndicesForSheet(sheet: sheets_v4.Schema$ValueRange, spring: boolean)
       }
 
       if (!emailColumn) {
-        console.info("No email column so returning null.");
+        console.info("No email column so returning null.", {
+          sheetName,
+          emailColumn,
+        });
         return null;
       }
 
@@ -450,7 +453,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     };
   }
   const { name, email } = info;
-
+  
   const spreadsheet = await loadSpreadSheet();
   const sheet = getSheet(spreadsheet, name, email);
   const data = {
