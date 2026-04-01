@@ -86,12 +86,12 @@ const startColumnLookup = {
   // "Take Flight": 5, // f
   // "IYA1": 5,
   // "IYA2": 5,
-
   // startColumn lookup for second semester.
-  "Pilot Your Potential": 19, // t
-  "Elevate Your Expectations": 20,
-  "Look To Launch": 18,
-  "Take Flight": 18,
+  // Moved it to no longer include launchpad self-guided training.
+  "Pilot Your Potential": 20, // t
+  "Elevate Your Expectations": 21,
+  "Look To Launch": 19,
+  "Take Flight": 19,
   "IYA1": 17,
   "IYA2": 17,
 }

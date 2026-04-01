@@ -85,7 +85,7 @@ function Content({data, error, isLoading}: {data: {tasks: TaskData[], year: stri
         </div>
         {
             data.year == "Elevate Your Expectations" && <div className="asterisk-note">
-                *If you complete UNIV 212, only the Launchpad self-guided training and community service hours are required. 
+                *If you complete UNIV 212, only the {/*Launchpad self-guided training and*/} community service hours are required. 
             </div>
         }
     </div>;
